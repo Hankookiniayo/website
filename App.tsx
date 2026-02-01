@@ -27,8 +27,10 @@ const App: React.FC = () => {
     try {
       const data = await fetchTrends(cat);
       setTrends(data.trends);
-    } catch (err) {
-      setError("데이터를 불러올 수 없습니다.");
+    } catch (err: any) {
+      console.error("Failed to load trends:", err);
+      const errorMessage = err.message || "데이터를 불러올 수 없습니다.";
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
