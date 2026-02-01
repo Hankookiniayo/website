@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { Category, TrendItem } from './types';
-import { fetchTrends } from './services/geminiService';
+import { fetchTrends } from './services/youtubeService';
 import { RankingList } from './components/RankingList';
 import { TrendModal } from './components/TrendModal';
 import { ShareModal } from './components/ShareModal';

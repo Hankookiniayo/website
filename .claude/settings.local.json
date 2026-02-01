@@ -10,7 +10,8 @@
       "Bash(curl:*)",
       "Bash(netstat:*)",
       "Bash(findstr:*)",
-      "Bash(npm run build:*)"
+      "Bash(npm run build:*)",
+      "WebFetch(domain:vibetrend.vercel.app)"
     ],
     "additionalDirectories": [
       "c:\\Users\\rngus\\OneDrive\\바탕 화면\\Coding(바이브코드)\\트렌드 웹사이트\\temp_website",
