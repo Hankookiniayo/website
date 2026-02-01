@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git init:*)",
+      "Bash(git remote add:*)",
+      "Bash(git fetch:*)",
+      "Bash(git checkout:*)"
+    ],
+    "additionalDirectories": [
+      "c:\\Users\\rngus\\OneDrive\\바탕 화면\\Coding(바이브코드)\\트렌드 웹사이트\\temp_website"
+    ]
+  }
+}
