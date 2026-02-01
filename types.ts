@@ -24,6 +24,9 @@ export interface TrendItem {
   volume: number; // 1-100 scale for search volume visualization
   link: string;
   tags: string[];
+  videoCategory?: string; // YouTube video category (e.g., "음악", "게임")
+  viewCount?: number; // Actual view count number
+  countryFlag?: string; // Country flag emoji
 }
 
 export interface TrendResponse {

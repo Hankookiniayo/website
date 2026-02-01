@@ -18,6 +18,41 @@ const getCategoryRegionCode = (category: Category): string => {
   }
 };
 
+// YouTube category ID to Korean name mapping
+const getVideoCategoryName = (categoryId: string): string => {
+  const categories: { [key: string]: string } = {
+    "1": "영화/애니메이션",
+    "2": "자동차/교통",
+    "10": "음악",
+    "15": "동물",
+    "17": "스포츠",
+    "19": "여행/이벤트",
+    "20": "게임",
+    "22": "일상/브이로그",
+    "23": "코미디",
+    "24": "엔터테인먼트",
+    "25": "뉴스/정치",
+    "26": "노하우/스타일",
+    "27": "교육",
+    "28": "과학/기술"
+  };
+  return categories[categoryId] || "기타";
+};
+
+// Get flag emoji for category
+const getCategoryFlag = (category: Category): string => {
+  switch (category) {
+    case Category.KOREA:
+      return "🇰🇷";
+    case Category.USA:
+      return "🇺🇸";
+    case Category.JAPAN:
+      return "🇯🇵";
+    default:
+      return "🌍";
+  }
+};
+
 export const fetchTrends = async (category: Category): Promise<TrendResponse> => {
   const regionCode = getCategoryRegionCode(category);
 
@@ -42,7 +77,10 @@ export const fetchTrends = async (category: Category): Promise<TrendResponse> =>
       stats: `조회수 ${formatViews(item.statistics.viewCount)}회`,
       volume: calculateVolume(item.statistics.viewCount, index),
       link: `https://www.youtube.com/watch?v=${item.id}`,
-      tags: item.snippet.tags?.slice(0, 5) || []
+      tags: item.snippet.tags?.slice(0, 5) || [],
+      videoCategory: getVideoCategoryName(item.snippet.categoryId),
+      viewCount: parseInt(item.statistics.viewCount),
+      countryFlag: getCategoryFlag(category)
     }));
 
     return {
