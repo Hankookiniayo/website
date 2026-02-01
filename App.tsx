@@ -148,7 +148,7 @@ const App: React.FC = () => {
           <span className="font-black italic">Vibetrend</span>
         </h1>
         <p className="text-gray-400 text-base md:text-lg font-medium text-center w-full mb-10 whitespace-nowrap opacity-80">
-          {activeCategory} 유튜브에서 매일 빠르게 변화하는 트렌드를 추적해보세요.
+          유튜브에서 매일 빠르게 변화하는 트렌드를 추적해보세요.
         </p>
 
         {/* Search Bar - Width matched with RankingList (max-w-2xl) */}
