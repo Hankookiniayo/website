@@ -216,8 +216,8 @@ const getMockTrends = (category: Category): TrendResponse => {
 };
 
 export const fetchTrends = async (category: Category): Promise<TrendResponse> => {
-  // TEMPORARY: Use mock data for testing
-  const USE_MOCK_DATA = true;
+  // YouTube API 실제 연동 활성화 (실패 시 mock 데이터 fallback)
+  const USE_MOCK_DATA = false;
 
   if (USE_MOCK_DATA) {
     return getMockTrends(category);
@@ -260,11 +260,9 @@ export const fetchTrends = async (category: Category): Promise<TrendResponse> =>
     console.error("Error fetching YouTube trends:", error);
     console.error("API URL:", `${YOUTUBE_API_BASE}/videos?part=snippet,statistics&chart=mostPopular&regionCode=${regionCode}&maxResults=10&key=${YOUTUBE_API_KEY}`);
 
-    // More detailed error message
-    if (error.message) {
-      throw new Error(`YouTube API 오류: ${error.message}`);
-    }
-    throw new Error("YouTube API 연결 실패. 잠시 후 다시 시도해주세요.");
+    // API 실패 시 mock 데이터로 fallback
+    console.warn("YouTube API 실패, mock 데이터를 사용합니다:", error.message);
+    return getMockTrends(category);
   }
 };
 

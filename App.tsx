@@ -1,245 +1,168 @@
 
-import React, { useState, useEffect, useCallback } from 'react';
-import { Category, TrendItem } from './types';
-import { fetchTrends } from './services/youtubeService';
-import { RankingList } from './components/RankingList';
-import { TrendModal } from './components/TrendModal';
-import { ShareModal } from './components/ShareModal';
-import { ExtractionMechanism } from './components/ExtractionMechanism';
+import React, { useState, useEffect } from 'react';
+import { Routes, Route, Link, useLocation } from 'react-router-dom';
+import { Menu, X, ArrowRight, Zap, TrendingUp, Search, Layers, ShieldCheck, HelpCircle, Mail, Github, Twitter, Linkedin, Star, Play } from 'lucide-react';
+import Home from './pages/Home';
+import Service from './pages/Service';
+import Pricing from './pages/Pricing';
+import Cases from './pages/Cases';
+import Trends from './pages/Trends';
+import Blog from './pages/Blog';
+import About from './pages/About';
+import Support from './pages/Support';
+import Signup from './pages/Signup';
+import SearchResults from './pages/SearchResults';
 
-const CATEGORIES = Object.values(Category);
-
-const App: React.FC = () => {
-  const [activeCategory, setActiveCategory] = useState<Category>(Category.KOREA);
-  const [trends, setTrends] = useState<TrendItem[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null);
-  const [selectedTrend, setSelectedTrend] = useState<TrendItem | null>(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isShareModalOpen, setIsShareModalOpen] = useState(false);
-  const [isNavMenuOpen, setIsNavMenuOpen] = useState(false);
-  const [isServicesOpen, setIsServicesOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
-
-  const loadTrends = useCallback(async (cat: Category) => {
-    setLoading(true);
-    setError(null);
-    try {
-      const data = await fetchTrends(cat);
-      setTrends(data.trends);
-    } catch (err: any) {
-      console.error("Failed to load trends:", err);
-      const errorMessage = err.message || "데이터를 불러올 수 없습니다.";
-      setError(errorMessage);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+const Navbar = () => {
+  const [isOpen, setIsOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
+  const location = useLocation();
 
   useEffect(() => {
-    loadTrends(activeCategory);
-  }, [activeCategory, loadTrends]);
+    const handleScroll = () => setScrolled(window.scrollY > 20);
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
-  const handleSelectTrend = (trend: TrendItem) => {
-    setSelectedTrend(trend);
-    setIsModalOpen(true);
-  };
-
-  const handleGoHome = () => {
-    setActiveCategory(Category.KOREA);
-    setSearchQuery('');
-    setIsServicesOpen(false);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
-
-  const handleComingSoon = () => {
-    alert('준비 중입니다.');
-  };
-
-  const toggleServices = () => {
-    setIsServicesOpen(!isServicesOpen);
-  };
-
-  const filteredTrends = trends.filter(t => 
-    t.title.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const navLinks = [
+    { name: '서비스', path: '/service' },
+    { name: '트렌드', path: '/trends' },
+    { name: '성공사례', path: '/cases' },
+    { name: '가격안내', path: '/pricing' },
+    { name: '블로그', path: '/blog' },
+  ];
 
   return (
-    <div className="min-h-screen bg-[#0a0a0a] text-white selection:bg-blue-500/30 flex flex-col overflow-y-auto">
-      {/* Navigation */}
-      <nav className="fixed top-0 left-0 right-0 z-50 bg-[#0a0a0a]/90 backdrop-blur-md border-b border-white/5">
-        <div className="max-w-[1400px] mx-auto px-6 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-12">
-            <div className="flex items-center space-x-2 cursor-pointer" onClick={handleGoHome}>
-              <div className="w-6 h-6 bg-white rounded flex items-center justify-center">
-                <span className="text-black font-black text-sm">V</span>
-              </div>
-              <span className="text-lg font-black tracking-tighter uppercase">VibeTrend</span>
-            </div>
-
-            <div className="hidden md:flex items-center gap-8">
-              <div className="relative">
-                <button 
-                  onClick={toggleServices}
-                  className="text-sm font-medium text-gray-300 hover:text-white flex items-center gap-1 transition-colors"
-                >
-                  모든 서비스 
-                  <svg 
-                    className={`w-4 h-4 transition-transform duration-300 ${isServicesOpen ? 'rotate-180' : ''}`} 
-                    fill="none" stroke="currentColor" viewBox="0 0 24 24"
-                  >
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
-                  </svg>
-                </button>
-                
-                {isServicesOpen && (
-                  <div className="absolute top-full left-0 pt-4 animate-in fade-in slide-in-from-top-2 duration-200">
-                    <div className="bg-[#1a1a1a] border border-white/10 rounded-2xl overflow-hidden shadow-2xl w-48 py-4">
-                      {CATEGORIES.map(cat => (
-                        <button
-                          key={cat}
-                          onClick={() => { setActiveCategory(cat); setIsServicesOpen(false); }}
-                          className={`w-full text-left px-5 py-2.5 text-xs font-bold transition-all ${activeCategory === cat ? 'bg-white text-black' : 'text-gray-400 hover:text-white hover:bg-white/5'}`}
-                        >
-                          {cat} 트렌드
-                        </button>
-                      ))}
-                      <div className="border-t border-white/5 mt-2 pt-2 px-5">
-                        <button onClick={handleComingSoon} className="text-[10px] font-bold text-gray-500 hover:text-white transition-colors">기타 국가 준비중...</button>
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              <button 
-                onClick={() => setIsShareModalOpen(true)}
-                className="text-sm font-medium text-gray-300 hover:text-white transition-colors"
-              >
-                공유하기
-              </button>
-              
-              <a 
-                href="https://notion.so" 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="text-sm font-medium text-gray-300 hover:text-white flex items-center gap-1 transition-colors"
-              >
-                도움말 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" /></svg>
-              </a>
-            </div>
+    <nav className={`fixed w-full z-50 transition-all duration-300 ${scrolled ? 'glass py-3' : 'bg-transparent py-5'}`}>
+      <div className="max-w-7xl mx-auto px-6 flex justify-between items-center">
+        <Link to="/" className="text-2xl font-black tracking-tighter flex items-center gap-2">
+          <div className="w-8 h-8 bg-white rounded flex items-center justify-center">
+            <TrendingUp className="text-black w-5 h-5" />
           </div>
-          
-          <div className="hidden md:flex items-center gap-6">
-            <button onClick={handleComingSoon} className="text-sm font-bold text-gray-400 hover:text-white transition-colors">로그인</button>
-            <button onClick={handleComingSoon} className="text-sm font-bold text-gray-400 hover:text-white transition-colors">가입하기</button>
-          </div>
-          
-          <button className="md:hidden" onClick={() => setIsNavMenuOpen(!isNavMenuOpen)}>
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
-          </button>
+          VIBETREND
+        </Link>
+
+        {/* Desktop Nav */}
+        <div className="hidden md:flex items-center gap-8">
+          {navLinks.map((link) => (
+            <Link
+              key={link.path}
+              to={link.path}
+              className={`text-sm font-semibold transition-colors hover:text-white ${location.pathname === link.path ? 'text-white' : 'text-zinc-400'}`}
+            >
+              {link.name}
+            </Link>
+          ))}
+          <Link to="/signup" className="px-5 py-2 bg-white text-black text-sm font-bold rounded-full hover:bg-zinc-200 transition-all active:scale-95">
+            무료로 시작하기
+          </Link>
         </div>
-      </nav>
 
-      {/* Hero Section */}
-      <header className="pt-32 pb-4 text-center px-6">
-        <h1 className="text-4xl md:text-5xl mb-6 flex flex-wrap items-center justify-center leading-tight tracking-tight">
-          <span className="font-light">트렌드세터를 위한 가장 강력한 도구,&nbsp;</span>
-          <span className="font-black italic">Vibetrend</span>
-        </h1>
-        <p className="text-gray-400 text-base md:text-lg font-medium text-center w-full mb-10 whitespace-nowrap opacity-80">
-          유튜브에서 매일 빠르게 변화하는 트렌드를 추적해보세요.
-        </p>
-
-        {/* Search Bar - Width matched with RankingList (max-w-2xl) */}
-        <div className="max-w-2xl mx-auto relative group px-4 mb-12">
-          <div className="absolute inset-y-0 left-8 flex items-center pointer-events-none">
-            <svg className="w-5 h-5 text-gray-500 group-focus-within:text-blue-400 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-            </svg>
-          </div>
-          <input 
-            type="text"
-            placeholder={`${activeCategory} 유튜브 키워드를 검색해보세요`}
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full bg-white/5 border border-white/10 rounded-2xl py-4 pl-14 pr-6 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:bg-white/10 transition-all text-sm placeholder:text-gray-600 shadow-2xl"
-          />
-        </div>
-      </header>
-
-      {/* Main Content */}
-      <main className="flex-1 max-w-4xl mx-auto w-full px-6 flex flex-col justify-start min-h-[500px]">
-        {loading ? (
-          <div className="flex-1 flex items-center justify-center">
-            <div className="w-10 h-10 border-4 border-blue-500/20 border-t-blue-500 rounded-full animate-spin" />
-          </div>
-        ) : error ? (
-          <div className="flex-1 flex flex-col items-center justify-center text-center">
-            <p className="text-gray-500 mb-4">{error}</p>
-            <button onClick={() => loadTrends(activeCategory)} className="px-6 py-2 bg-white text-black font-bold rounded-full">다시 시도</button>
-          </div>
-        ) : (
-          <div className="flex flex-col items-center w-full">
-            <div className="mb-6 flex gap-2">
-              {CATEGORIES.map(cat => (
-                <button
-                  key={cat}
-                  onClick={() => setActiveCategory(cat)}
-                  className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all ${activeCategory === cat ? 'bg-white text-black' : 'bg-white/5 text-gray-500 hover:text-white'}`}
-                >
-                  {cat}
-                </button>
-              ))}
-            </div>
-            <RankingList trends={filteredTrends} onSelectTrend={handleSelectTrend} />
-          </div>
-        )}
-      </main>
-
-      {/* Extraction Mechanism Section */}
-      <ExtractionMechanism />
-
-      <TrendModal 
-        trend={selectedTrend} 
-        isOpen={isModalOpen} 
-        onClose={() => setIsModalOpen(false)} 
-      />
-
-      <ShareModal 
-        isOpen={isShareModalOpen} 
-        onClose={() => setIsShareModalOpen(false)} 
-      />
+        {/* Mobile Toggle */}
+        <button className="md:hidden text-zinc-400 hover:text-white" onClick={() => setIsOpen(!isOpen)}>
+          {isOpen ? <X size={24} /> : <Menu size={24} />}
+        </button>
+      </div>
 
       {/* Mobile Nav */}
-      {isNavMenuOpen && (
-        <div className="fixed inset-0 z-[60] bg-[#0a0a0a] p-8 animate-in slide-in-from-top duration-300">
-          <div className="flex justify-between items-center mb-12">
-            <span className="text-lg font-black tracking-tighter uppercase cursor-pointer" onClick={() => { handleGoHome(); setIsNavMenuOpen(false); }}>VibeTrend</span>
-            <button onClick={() => setIsNavMenuOpen(false)}>
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
-            </button>
-          </div>
-          <div className="flex flex-col space-y-6">
-            <button onClick={() => {setIsShareModalOpen(true); setIsNavMenuOpen(false);}} className="text-left text-2xl font-black text-gray-300">공유하기</button>
-            <a href="https://notion.so" className="text-left text-2xl font-black text-gray-300">도움말</a>
-            <hr className="border-white/10" />
-            <div className="text-xs text-gray-500 uppercase tracking-widest font-bold">국가 선택</div>
-            {CATEGORIES.map(cat => (
-              <button
-                key={cat}
-                onClick={() => { setActiveCategory(cat); setIsNavMenuOpen(false); }}
-                className={`text-left text-2xl font-black ${activeCategory === cat ? 'text-white' : 'text-gray-700'}`}
-              >
-                {cat} 트렌드
-              </button>
-            ))}
-            <hr className="border-white/10" />
-            <button onClick={handleComingSoon} className="text-left text-2xl font-black text-gray-500">로그인</button>
-            <button onClick={handleComingSoon} className="text-left text-2xl font-black text-gray-500">가입하기</button>
-          </div>
+      {isOpen && (
+        <div className="md:hidden glass absolute top-full left-0 w-full p-6 space-y-4 animate-in slide-in-from-top duration-300">
+          {navLinks.map((link) => (
+            <Link
+              key={link.path}
+              to={link.path}
+              className="block text-lg font-bold"
+              onClick={() => setIsOpen(false)}
+            >
+              {link.name}
+            </Link>
+          ))}
+          <Link
+            to="/signup"
+            className="block w-full text-center py-4 bg-white text-black font-black rounded-lg"
+            onClick={() => setIsOpen(false)}
+          >
+            무료로 시작하기
+          </Link>
         </div>
       )}
+    </nav>
+  );
+};
+
+const Footer = () => {
+  return (
+    <footer className="bg-black border-t border-white/5 pt-20 pb-10">
+      <div className="max-w-7xl mx-auto px-6">
+        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-12 mb-20">
+          <div className="col-span-2">
+            <Link to="/" className="text-2xl font-black tracking-tighter mb-6 block">VIBETREND</Link>
+            <p className="text-zinc-400 text-sm max-w-xs leading-relaxed mb-8">
+              글로벌 유튜브 트렌드 분석을 통해 크리에이터와 마케터의 성장을 돕는 인텔리전스 플랫폼입니다.
+            </p>
+            <div className="flex gap-4">
+              <Twitter className="w-5 h-5 text-zinc-600 hover:text-white cursor-pointer" />
+              <Github className="w-5 h-5 text-zinc-600 hover:text-white cursor-pointer" />
+              <Linkedin className="w-5 h-5 text-zinc-600 hover:text-white cursor-pointer" />
+            </div>
+          </div>
+          <div>
+            <h4 className="font-bold mb-6">플랫폼</h4>
+            <ul className="space-y-4 text-sm text-zinc-400">
+              <li><Link to="/trends" className="hover:text-white">실시간 트렌드</Link></li>
+              <li><Link to="/service" className="hover:text-white">AI 인사이트</Link></li>
+              <li><Link to="/pricing" className="hover:text-white">요금제 안내</Link></li>
+            </ul>
+          </div>
+          <div>
+            <h4 className="font-bold mb-6">리소스</h4>
+            <ul className="space-y-4 text-sm text-zinc-400">
+              <li><Link to="/blog" className="hover:text-white">블로그</Link></li>
+              <li><Link to="/cases" className="hover:text-white">성공 사례</Link></li>
+              <li><Link to="/support" className="hover:text-white">고객 센터</Link></li>
+            </ul>
+          </div>
+          <div>
+            <h4 className="font-bold mb-6">회사</h4>
+            <ul className="space-y-4 text-sm text-zinc-400">
+              <li><Link to="/about" className="hover:text-white">회사 소개</Link></li>
+              <li><Link to="/about" className="hover:text-white">채용</Link></li>
+              <li><span className="hover:text-white cursor-pointer">이용약관</span></li>
+            </ul>
+          </div>
+        </div>
+        <div className="flex flex-col md:flex-row justify-between items-center pt-8 border-t border-white/5 gap-4">
+          <p className="text-xs text-zinc-500">&copy; 2025 VibeTrend. All rights reserved.</p>
+          <div className="flex gap-8 text-xs text-zinc-500">
+            <span>Cookie Preferences</span>
+            <span>Trust Center</span>
+            <span>Legal and Privacy</span>
+          </div>
+        </div>
+      </div>
+    </footer>
+  );
+};
+
+const App: React.FC = () => {
+  return (
+    <div className="min-h-screen bg-black">
+      <Navbar />
+      <main>
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/service" element={<Service />} />
+          <Route path="/pricing" element={<Pricing />} />
+          <Route path="/cases" element={<Cases />} />
+          <Route path="/trends" element={<Trends />} />
+          <Route path="/search" element={<SearchResults />} />
+          <Route path="/blog" element={<Blog />} />
+          <Route path="/about" element={<About />} />
+          <Route path="/support" element={<Support />} />
+          <Route path="/signup" element={<Signup />} />
+        </Routes>
+      </main>
+      <Footer />
     </div>
   );
 };

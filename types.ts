@@ -21,15 +21,34 @@ export interface TrendItem {
   category: Category;
   imageUrl: string;
   stats: string;
-  volume: number; // 1-100 scale for search volume visualization
+  volume: number;
   link: string;
   tags: string[];
-  videoCategory?: string; // YouTube video category (e.g., "음악", "게임")
-  viewCount?: number; // Actual view count number
-  countryFlag?: string; // Country flag emoji
+  videoCategory?: string;
+  viewCount?: number;
+  countryFlag?: string;
 }
 
 export interface TrendResponse {
   trends: TrendItem[];
   globalInsight: string;
+}
+
+export interface CaseStudy {
+  id: string;
+  name: string;
+  role: string;
+  subscribers: string;
+  problem: string;
+  solution: string;
+  result: string;
+  metrics: { label: string; value: string }[];
+  quote: string;
+  image: string;
+}
+
+export enum PlanType {
+  FREE = 'Free',
+  PRO = 'Pro',
+  BUSINESS = 'Business'
 }
