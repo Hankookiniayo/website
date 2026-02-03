@@ -16,7 +16,12 @@
       "Bash(git push:*)",
       "Bash(ls:*)",
       "Bash(find:*)",
-      "Bash(tree:*)"
+      "Bash(tree:*)",
+      "Bash(npx tsc:*)",
+      "Bash(python -c:*)",
+      "Bash(npx vercel dev:*)",
+      "Bash(npx kill-port:*)",
+      "Bash(npx supabase:*)"
     ],
     "additionalDirectories": [
       "c:\\Users\\rngus\\OneDrive\\바탕 화면\\Coding(바이브코드)\\트렌드 웹사이트\\temp_website",

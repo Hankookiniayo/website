@@ -1,0 +1,17 @@
+{
+  "framework": "vite",
+  "functions": {
+    "api/*.ts": {
+      "runtime": "@vercel/node@5.5.28"
+    }
+  },
+  "rewrites": [
+    { "source": "/((?!api/).*)", "destination": "/index.html" }
+  ],
+  "crons": [
+    {
+      "path": "/api/cron-refresh",
+      "schedule": "0 0 * * *"
+    }
+  ]
+}

@@ -1,9 +1,10 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, Filter, Globe, BarChart3, Clock, Lock, Sparkles, TrendingUp, TrendingDown, Minus } from 'lucide-react';
+import { Search, BarChart3, Clock, Sparkles, HelpCircle } from 'lucide-react';
 import { TrendItem, Category } from '../types';
 import { fetchTrends } from '../services/youtubeService';
+import { analyzeTrendItem } from '../services/geminiService';
 
 const categoryMap: Record<string, Category> = {
   'KR': Category.KOREA,
@@ -19,6 +20,12 @@ const Trends: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [totalAnalyzed, setTotalAnalyzed] = useState(0);
+  const [summaryCache, setSummaryCache] = useState<{ [videoId: string]: string }>({});
+  const [analyzingId, setAnalyzingId] = useState<string | null>(null);
+  const [requestCount, setRequestCount] = useState(0);
+  const [showVibeScoreInfo, setShowVibeScoreInfo] = useState(false);
+  const [showAiInsightsInfo, setShowAiInsightsInfo] = useState(false);
+  const lastRequestTime = useRef<number>(0);
 
   const loadTrends = async (tab: 'KR' | 'US' | 'JP') => {
     setLoading(true);
@@ -51,6 +58,61 @@ const Trends: React.FC = () => {
     }
   };
 
+  const handleGetSummary = async (trend: TrendItem) => {
+    if (summaryCache[trend.id]) {
+      return;
+    }
+
+    if (analyzingId) {
+      return;
+    }
+
+    const now = Date.now();
+    const timeSinceLastRequest = now - lastRequestTime.current;
+    if (timeSinceLastRequest < 4000) {
+      console.warn('⏳ 요청이 너무 빠릅니다. 4초 후 다시 시도해주세요.');
+      return;
+    }
+
+    if (requestCount >= 15) {
+      console.warn('⚠️ 분당 요청 제한(15회)에 도달했습니다. 잠시 후 다시 시도해주세요.');
+      setSummaryCache(prev => ({
+        ...prev,
+        [trend.id]: '⚠️ API 요청 제한에 도달했습니다. 잠시 후 다시 시도해주세요.'
+      }));
+      return;
+    }
+
+    setAnalyzingId(trend.id);
+    lastRequestTime.current = now;
+    setRequestCount(prev => prev + 1);
+
+    try {
+      const insight = await analyzeTrendItem(trend);
+      setSummaryCache(prev => ({
+        ...prev,
+        [trend.id]: insight.summary,
+      }));
+    } catch (error) {
+      console.error('요약 생성 실패:', error);
+      setSummaryCache(prev => ({
+        ...prev,
+        [trend.id]: `${trend.videoCategory || 'YouTube'} 카테고리의 인기 영상입니다. "${trend.title}" 제목으로 많은 관심을 받고 있습니다.`
+      }));
+    } finally {
+      setAnalyzingId(null);
+    }
+  };
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setRequestCount(0);
+      console.log('✅ API 요청 카운터가 리셋되었습니다.');
+    }, 60000);
+
+    return () => clearInterval(interval);
+  }, []);
+
   const formatViewCount = (count?: number): string => {
     if (!count) return '-';
     if (count >= 100000000) return `${(count / 100000000).toFixed(1)}억회`;
@@ -70,14 +132,6 @@ const Trends: React.FC = () => {
               <span className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
             </div>
             <h1 className="text-4xl font-black">실시간 트렌드 리더보드</h1>
-          </div>
-          <div className="flex gap-3">
-            <button className="px-6 py-3 glass rounded-full text-sm font-bold flex items-center gap-2 hover:bg-white/5">
-              <Filter size={16} /> 필터링
-            </button>
-            <button className="px-6 py-3 bg-white text-black rounded-full text-sm font-black hover:bg-zinc-200">
-              맞춤 리포트 생성
-            </button>
           </div>
         </div>
 
@@ -147,10 +201,53 @@ const Trends: React.FC = () => {
                 <tr className="bg-white/5 border-b border-white/5">
                   <th className="px-8 py-5 text-xs font-black text-zinc-500 uppercase tracking-widest">Rank</th>
                   <th className="px-8 py-5 text-xs font-black text-zinc-500 uppercase tracking-widest">Title</th>
-                  <th className="px-8 py-5 text-xs font-black text-zinc-500 uppercase tracking-widest hidden md:table-cell">Category</th>
                   <th className="px-8 py-5 text-xs font-black text-zinc-500 uppercase tracking-widest">Views</th>
-                  <th className="px-8 py-5 text-xs font-black text-zinc-500 uppercase tracking-widest">Vibe Score</th>
-                  <th className="px-8 py-5 text-xs font-black text-zinc-500 uppercase tracking-widest text-right">AI Insights</th>
+                  <th className="px-8 py-5 text-xs font-black text-zinc-500 uppercase tracking-widest relative">
+                    <div className="flex items-center gap-2">
+                      <span>Vibe Score</span>
+                      <button
+                        onClick={() => setShowVibeScoreInfo(!showVibeScoreInfo)}
+                        className="relative"
+                      >
+                        <HelpCircle size={14} className="text-zinc-600 hover:text-white transition-colors cursor-help" />
+                        {showVibeScoreInfo && (
+                          <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 w-72 glass p-4 rounded-xl border border-white/10 z-50 shadow-2xl">
+                            <div className="flex items-start gap-2 mb-2">
+                              <BarChart3 size={14} className="text-blue-400 mt-0.5" />
+                              <span className="text-xs font-bold text-zinc-400 uppercase tracking-wider">VIBE SCORE란?</span>
+                            </div>
+                            <p className="text-xs text-zinc-300 leading-relaxed">
+                              조회수와 순위를 종합하여 계산된 화제성 점수입니다. 높을수록 현재 더 뜨거운 트렌드를 의미합니다.
+                            </p>
+                            <div className="absolute -top-1.5 left-1/2 -translate-x-1/2 w-3 h-3 bg-zinc-900 border-l border-t border-white/10 rotate-45"></div>
+                          </div>
+                        )}
+                      </button>
+                    </div>
+                  </th>
+                  <th className="px-8 py-5 text-xs font-black text-zinc-500 uppercase tracking-widest text-right relative">
+                    <div className="flex items-center justify-end gap-2">
+                      <span>AI Insights</span>
+                      <button
+                        onClick={() => setShowAiInsightsInfo(!showAiInsightsInfo)}
+                        className="relative"
+                      >
+                        <HelpCircle size={14} className="text-zinc-600 hover:text-white transition-colors cursor-help" />
+                        {showAiInsightsInfo && (
+                          <div className="absolute top-full right-0 mt-2 w-72 glass p-4 rounded-xl border border-white/10 z-50 shadow-2xl">
+                            <div className="flex items-start gap-2 mb-2">
+                              <Sparkles size={14} className="text-blue-400 mt-0.5" />
+                              <span className="text-xs font-bold text-zinc-400 uppercase tracking-wider">AI INSIGHTS란?</span>
+                            </div>
+                            <p className="text-xs text-zinc-300 leading-relaxed">
+                              Gemini AI가 영상 제목, 카테고리, 조회수를 분석하여 2-3문장으로 핵심 내용을 요약해드립니다.
+                            </p>
+                            <div className="absolute -top-1.5 right-6 w-3 h-3 bg-zinc-900 border-l border-t border-white/10 rotate-45"></div>
+                          </div>
+                        )}
+                      </button>
+                    </div>
+                  </th>
                 </tr>
               </thead>
               <tbody>
@@ -165,9 +262,14 @@ const Trends: React.FC = () => {
                     </td>
                     <td className="px-8 py-6">
                       <div>
-                        <div className="flex items-center gap-2 mb-1">
+                        <div className="flex items-center gap-2 mb-2">
                           {trend.countryFlag && <span className="text-sm">{trend.countryFlag}</span>}
-                          <p className="font-bold text-sm line-clamp-1 group-hover:text-white transition-colors">{trend.title}</p>
+                          <p className="font-bold text-sm group-hover:text-white transition-colors">{trend.title}</p>
+                        </div>
+                        <div className="flex items-center gap-2 mb-1.5">
+                          <span className="px-2 py-1 rounded text-[10px] font-bold bg-blue-500/10 text-blue-400 border border-blue-500/20">
+                            {trend.videoCategory || 'YouTube'}
+                          </span>
                         </div>
                         <div className="flex gap-1.5 flex-wrap">
                           {trend.tags?.slice(0, 3).map((tag, i) => (
@@ -175,11 +277,6 @@ const Trends: React.FC = () => {
                           ))}
                         </div>
                       </div>
-                    </td>
-                    <td className="px-8 py-6 hidden md:table-cell">
-                      <span className="px-2 py-1 rounded text-[10px] font-bold bg-blue-500/10 text-blue-400 border border-blue-500/20">
-                        {trend.videoCategory || 'YouTube'}
-                      </span>
                     </td>
                     <td className="px-8 py-6">
                       <span className="text-sm font-bold text-zinc-300">{formatViewCount(trend.viewCount)}</span>
@@ -192,15 +289,25 @@ const Trends: React.FC = () => {
                         <span className="text-sm font-bold mono">{trend.volume}</span>
                       </div>
                     </td>
-                    <td className="px-8 py-6 text-right">
-                      {index < 2 ? (
-                        <button className="px-4 py-2 bg-white text-black text-xs font-black rounded-lg hover:scale-105 transition-all">
-                          인사이트 보기
-                        </button>
-                      ) : (
-                        <div className="flex items-center justify-end gap-2 text-zinc-600 group-hover:text-zinc-400 transition-colors">
-                          <Lock size={12} />
-                          <span className="text-xs font-bold">Pro 전용</span>
+                    <td className="px-8 py-6 text-right relative group">
+                      <button
+                        className="px-4 py-2 bg-white text-black text-xs font-black rounded-lg hover:bg-zinc-200 transition-all"
+                        onClick={() => handleGetSummary(trend)}
+                        disabled={analyzingId === trend.id}
+                      >
+                        {analyzingId === trend.id ? '분석 중...' : summaryCache[trend.id] ? '요약 보기' : '영상 요약'}
+                      </button>
+
+                      {summaryCache[trend.id] && (
+                        <div className={`absolute ${index > trends.length - 3 ? 'bottom-full mb-2' : 'top-full mt-2'} right-0 w-80 glass p-5 rounded-xl border border-white/10 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 z-50 shadow-2xl`}>
+                          <div className="flex items-start gap-2 mb-2">
+                            <span className="text-blue-400 text-xs">✨</span>
+                            <span className="text-xs font-bold text-zinc-400 uppercase tracking-wider">AI 요약</span>
+                          </div>
+                          <p className="text-sm text-zinc-200 leading-relaxed">
+                            {summaryCache[trend.id]}
+                          </p>
+                          <div className={`absolute ${index > trends.length - 3 ? '-bottom-2 rotate-[225deg]' : '-top-2 rotate-45'} right-6 w-4 h-4 bg-zinc-900 border-l border-t border-white/10`}></div>
                         </div>
                       )}
                     </td>
