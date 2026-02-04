@@ -1,65 +1,60 @@
+
 import React from 'react';
+import { Link } from 'react-router-dom';
+import { Twitter, Github, Linkedin } from 'lucide-react';
 
-export const Footer: React.FC = () => {
+const Footer: React.FC = () => {
   return (
-    <footer className="border-t border-white/5 bg-[#0a0a0a]">
-      <div className="max-w-5xl mx-auto px-6 py-16">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
-          {/* Brand */}
-          <div className="col-span-2 md:col-span-1">
-            <div className="flex items-center space-x-2 mb-4">
-              <div className="w-6 h-6 bg-white rounded flex items-center justify-center">
-                <span className="text-black font-black text-sm">V</span>
-              </div>
-              <span className="text-lg font-black tracking-tighter uppercase">VibeTrend</span>
-            </div>
-            <p className="text-sm text-gray-500 leading-relaxed">
-              트렌드세터를 위한 가장 강력한 도구.
-              <br />
-              바이브코딩의 첫 번째 웹 프로젝트.
+    <footer className="bg-black border-t border-white/5 pt-20 pb-10">
+      <div className="max-w-7xl mx-auto px-6">
+        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-12 mb-20">
+          <div className="col-span-2">
+            <Link to="/" className="text-2xl font-black tracking-tighter mb-6 block">VIBETREND</Link>
+            <p className="text-zinc-400 text-sm max-w-xs leading-relaxed mb-8">
+              글로벌 유튜브 트렌드 분석을 통해 크리에이터와 마케터의 성장을 돕는 인텔리전스 플랫폼입니다.
             </p>
+            <div className="flex gap-4">
+              <Twitter className="w-5 h-5 text-zinc-600 hover:text-white cursor-pointer" />
+              <Github className="w-5 h-5 text-zinc-600 hover:text-white cursor-pointer" />
+              <Linkedin className="w-5 h-5 text-zinc-600 hover:text-white cursor-pointer" />
+            </div>
           </div>
-
-          {/* Services */}
           <div>
-            <h4 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4">서비스</h4>
-            <ul className="space-y-3">
-              <li><a href="#trend-tool" className="text-sm text-gray-500 hover:text-white transition-colors">한국 트렌드</a></li>
-              <li><a href="#trend-tool" className="text-sm text-gray-500 hover:text-white transition-colors">미국 트렌드</a></li>
-              <li><a href="#trend-tool" className="text-sm text-gray-500 hover:text-white transition-colors">일본 트렌드</a></li>
+            <h4 className="font-bold mb-6">플랫폼</h4>
+            <ul className="space-y-4 text-sm text-zinc-400">
+              <li><Link to="/trends" className="hover:text-white">실시간 트렌드</Link></li>
+              <li><Link to="/service" className="hover:text-white">AI 인사이트</Link></li>
+              <li><Link to="/pricing" className="hover:text-white">요금제 안내</Link></li>
             </ul>
           </div>
-
-          {/* Info */}
           <div>
-            <h4 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4">정보</h4>
-            <ul className="space-y-3">
-              <li><a href="#features" className="text-sm text-gray-500 hover:text-white transition-colors">서비스 소개</a></li>
-              <li><a href="#faq" className="text-sm text-gray-500 hover:text-white transition-colors">도움말</a></li>
+            <h4 className="font-bold mb-6">리소스</h4>
+            <ul className="space-y-4 text-sm text-zinc-400">
+              <li><Link to="/blog" className="hover:text-white">블로그</Link></li>
+              <li><Link to="/cases" className="hover:text-white">성공 사례</Link></li>
+              <li><Link to="/support" className="hover:text-white">고객 센터</Link></li>
             </ul>
           </div>
-
-          {/* Tech Stack */}
           <div>
-            <h4 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4">기술 스택</h4>
-            <ul className="space-y-3">
-              <li className="text-sm text-gray-500">React 19 + TypeScript</li>
-              <li className="text-sm text-gray-500">YouTube Data API v3</li>
-              <li className="text-sm text-gray-500">Vercel</li>
+            <h4 className="font-bold mb-6">회사</h4>
+            <ul className="space-y-4 text-sm text-zinc-400">
+              <li><Link to="/about" className="hover:text-white">회사 소개</Link></li>
+              <li><Link to="/about" className="hover:text-white">채용</Link></li>
+              <li><span className="hover:text-white cursor-pointer">이용약관</span></li>
             </ul>
           </div>
         </div>
-
-        {/* Bottom bar */}
-        <div className="border-t border-white/10 mt-12 pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
-          <p className="text-gray-600 text-sm">
-            &copy; 2025 VibeTrend by 바이브코딩. All rights reserved.
-          </p>
-          <p className="text-gray-600 text-sm">
-            Claude AI와 함께 개발
-          </p>
+        <div className="flex flex-col md:flex-row justify-between items-center pt-8 border-t border-white/5 gap-4">
+          <p className="text-xs text-zinc-500">&copy; 2025 VibeTrend. All rights reserved.</p>
+          <div className="flex gap-8 text-xs text-zinc-500">
+            <span>Cookie Preferences</span>
+            <span>Trust Center</span>
+            <span>Legal and Privacy</span>
+          </div>
         </div>
       </div>
     </footer>
   );
 };
+
+export default Footer;
